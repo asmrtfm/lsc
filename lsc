@@ -1,0 +1,34 @@
+#!/usr/bin/bash
+
+[[ "${1,,}" != +(\-)@(h)?(elp) ]] || { cat <<'EOL'
+NAME:
+   lsc
+
+USAGE:
+   lsc [-OPTION] <PATH ...>
+
+SYNOPSIS:
+   a wrapper that enhances,
+   or perhaps just does what you might hope
+   some combination of `ls -c` and `sort` would do.
+
+OPTIONS:
+   -h, --help
+   -r, --recursive
+
+EOL
+	exit 0
+}
+
+if [[ "$1" != +(\-)@([rR])?([eE][cC][uU][rR][sS][iI][vV][eE]) ]]; then
+	for((a=1;a<=$#;a++)){ stat -Lc '%y' "${!a}" | bashed '%\.*' '//[!0-9]/' ".( ${!a})"; }
+else
+	for((a=2;a<=$#;a++)){
+		if [[ ! -d "${!a}" ]]; then
+			stat -Lc '%y' "${!a}" | bashed '%\.*' '//[!0-9]/' ".( ${!a})"
+		else
+			# while read line ; do echo "$(echo "$line" | awk '{print $1,$2}' | bashed '//[!0-9]/') ${!a}/${line#*${!a}\/}"; done < <(stat -Lc '%y %n' "${!a}"/* | bashed "/\.*\ ${!a}\//\ ${!a}\/" )
+			while read line ; do echo "$(echo "$line" | awk '{print $1,$2}' | bashed '//[!0-9]/') ${!a}/${line#*${!a}\/}"; done < <(find -P "${!a}" -exec stat -Lc '%y %n' '{}' \; 2>/dev/null | bashed "/\.*\ ${!a}\//\ ${!a}\/" )
+		fi
+	}
+fi | sort -n
